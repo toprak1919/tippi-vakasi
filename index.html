@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
+<title>Son Kurabiye</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:#fff;overscroll-behavior:none;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+font:15px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+#app{position:fixed;inset:0;max-width:30rem;margin:0 auto;display:flex;flex-direction:column;
+padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#hud{display:flex;justify-content:space-between;padding:.5rem .8rem;font-size:.7rem;letter-spacing:.18em;color:#f7c4d8}
+canvas{display:block;width:100%;aspect-ratio:160/144;image-rendering:pixelated;image-rendering:crisp-edges;background:#000}
+#box{margin:.6rem .6rem 0;border:3px solid #fff;min-height:7.6rem;padding:.6rem .75rem;position:relative}
+#meta{font-size:.62rem;letter-spacing:.16em;color:#f7c4d8;min-height:1em}
+#txt{font-size:1rem;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:.15rem}
+#more{position:absolute;right:.6rem;bottom:.3rem;font-size:.7rem;animation:bl 1s steps(2) infinite;visibility:hidden}
+@keyframes bl{50%{opacity:0}}
+#choice{display:none;grid-template-columns:1fr 1fr;gap:.45rem;margin-top:.5rem}
+#choice button{font:inherit;font-size:.72rem;letter-spacing:.08em;color:#fff;background:#000;border:2px solid #fff;padding:.65rem .2rem;min-width:0}
+#choice button:active{background:#f7c4d8;color:#000}
+#pad{flex:1;display:flex;justify-content:space-between;align-items:center;padding:0 1.4rem;min-height:9rem}
+#dpad{width:132px;height:132px;position:relative;touch-action:none}
+#dpad i{position:absolute;width:44px;height:44px;border:2px solid #fff;display:grid;place-items:center;font-style:normal;font-size:.8rem}
+#dpad i.on{background:#f7c4d8;color:#000}
+#dpad .u{left:44px;top:0}#dpad .d{left:44px;top:88px}#dpad .l{left:0;top:44px}#dpad .r{left:88px;top:44px}
+#a{width:84px;height:84px;border-radius:50%;border:3px solid #fff;background:#000;color:#fff;font:inherit;font-size:1.4rem;touch-action:none}
+#a:active{background:#f7c4d8;color:#000}
+.ov{position:absolute;inset:0;background:#000;display:none;flex-direction:column;justify-content:center;padding:1.6rem;z-index:5;overflow-y:auto}
+.ov.on{display:flex}
+.ov h1{font-size:1.4rem;letter-spacing:.2em;font-weight:400;margin:0 0 1.2rem;text-align:center}
+.card{border:3px solid #fff;padding:.9rem 1rem;font-size:.8rem;line-height:1.9;letter-spacing:.04em}
+.card b{display:block;font-weight:400;letter-spacing:.3em;color:#f7c4d8;margin-bottom:.3rem}
+.ql{margin:1.2rem 0}
+.ql p{margin:.5rem 0;font-size:.95rem}
+.go{font:inherit;letter-spacing:.3em;color:#000;background:#fff;border:0;padding:1rem;width:100%;margin-top:.6rem}
+.go:active{background:#f7c4d8}
+.small{font-size:.62rem;letter-spacing:.1em;color:#8d8693;text-align:center;margin-top:1rem;line-height:1.7}
+.stamp{align-self:center;border:3px solid #f7c4d8;color:#f7c4d8;padding:.4rem 1rem;letter-spacing:.3em;transform:rotate(-6deg);margin-bottom:1.4rem}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span>VAKA № 001</span><span>DEFTER <span id="clues"></span></span></div>
+  <canvas id="cv" width="160" height="144"></canvas>
+  <div id="box"><div id="meta"></div><div id="txt"></div><div id="choice"></div><div id="more">▼</div></div>
+  <div id="pad">
+    <div id="dpad"><i class="u">▲</i><i class="l">◀</i><i class="r">▶</i><i class="d">▼</i></div>
+    <button id="a">A</button>
+  </div>
+
+  <div class="ov on" id="intro">
+    <h1 id="title"></h1>
+    <div class="card" id="case"></div>
+    <div class="ql" id="introQ"></div>
+    <button class="go" id="go"></button>
+    <div class="small" id="how"></div>
+  </div>
+
+  <div class="ov" id="end">
+    <div class="stamp" id="solved"></div>
+    <div class="card" id="verdict"></div>
+    <div class="ql" id="endQ"></div>
+    <div class="small" id="foot"></div>
+  </div>
+</div>
+<noscript><p style="position:fixed;inset:0;display:grid;place-items:center;padding:2rem;text-align:center;background:#000">JavaScript gerekli. Safari’de aç.</p></noscript>
+<script type="application/json" id="data">{"title": "SON KURABİYE", "case": ["VAKA № 001", "KAYIP: son kurabiye (yulaflı, üzümlü)", "OLAY SAATİ: 03:33", "MAĞDUR: dedektifin kendisi", "ŞÜPHELİ: evdeki herkes"], "intro": ["Dışarıda kar. İçeride sıcak çikolata.", "Televizyonda karlı bölüm. Tabakta son kurabiye.", "Daha doğrusu: tabakta son kurabiye vardı."], "start": "BAŞLA", "how": "YÜRÜ: OKLAR · İNCELE / KONUŞ: A", "enter": ["* 03:34. Tabak boş. Ev sessiz. Fazla sessiz.", "* Dedektif sensin. Mağdur da sensin. Tarafsız kalmak zorunda değilsin."], "obj": {"plate": ["* Tabak. Boş. Kırıntı var, kurabiye yok.", "* Kenarında bir tutam beyaz tüy.", "* Pudra şekerinde üç parmaklı minik izler. Pencereye doğru gidiyor."], "tv": ["* Televizyon. Karlı bölüm 03:33'te durmuş.", "* Kumandanın üstüne biri basmış. Hafif biri.", "* Alttan yazı geçiyor: BUGÜN HAVA AÇIK. KAR BEKLENMİYOR."], "window": ["* Pencere. Lapa lapa kar yağıyor.", "* Hava durumu yanılmış. Ya da biri hava durumunu yanıltmış.", "* Pervazda şekerli minik izler. İki çift. Yan yana durup kar izlemişler."], "desk": ["* Laptop. Ekranda tek satır: asdfghjklşi", "* Kayıt saati 03:33. Klavye kola içinde.", "* Kolada siyah bir pati izi. Hâlâ yapış yapış."], "birds": [["MİMO", "Biz bir şey görmedik."], ["MİLO", "Çok şey gördük."], ["MİMO", "Kırıntı yedik. Kırıntı suç değil."], ["MİLO", "Sonra cama uçtuk. Kar başlamıştı. Birdenbire."], ["MİMO", "Tabağa indiğimizde kurabiye zaten yoktu."], ["MİLO", "Bizden önce biri gelmiş. Tüy döküyordu. Biz dökmeyiz."]], "heater": ["* Soba. Gürül gürül yanıyor.", "* Üstü kızgın. Buna el değmez. Pati hiç değmez.", "* Bu gece bunun üstünde kimse uyumadı."], "bed": ["* Yatak. Yastığın üstünde açık bir kitap.", "* 'Yeni Başlayanlar İçin Adak.' Sayfa 33: Aynaya Yiyecek Gönderme.", "* Gerekenler: beş mum, bir tatlı, iyi niyet.", "* Sayfada bir pati izi. Ayraç niyetine bir bıyık teli. Beyaz."], "candles": ["* Beş mum. Daire şeklinde. Bunları sen yakmadın.", "* Mumlar hâlâ yumuşak. Yeni sönmüş.", "* Dairenin ortasında tek bir kuru üzüm. Ve beyaz tüy. Yine."], "molly": ["* Koli. Boştu. Artık değil.", ["MOLLY", "Ben klavyedeydim. Kolayı ben devirdim. Gurur duyuyorum."], ["MOLLY", "Kurabiye mi? Üzümlüydü. Kokusundan bilirim."], ["MOLLY", "Kediler üzüm yemez. Zehir. Ben bile dokunmam."], ["MOLLY", "Ben her şeye dokunurum. Bunu bil."], "* Molly. Evdeki adı Mali. Kayıtlara öyle geçti."]}, "tippi": [[["TİPPİ", "Ben mi? Ben uyuyordum. Sobanın üstünde. Sıcacıktı."], ["TİPPİ", "Minik, masum bir kediyim ben. Gözlüğüme bak."]], [["TİPPİ", "Gözlük süs değil. Okurum ben. Çok okurum."], ["TİPPİ", "...Bunu söylememeliydim."]], [["TİPPİ", "Avukatımı istiyorum."], ["TİPPİ", "Avukatım Molly. Molly kolide. Kolide mesai yok."]]], "mirror1": ["* Ayna. İçinde sen varsın. Bir de sen olmayan biri.", ["AYNA CİNİ", "Ben mi? Ben aynadan çıkamam. Elim camdan geçmiyor."], ["AYNA CİNİ", "Yüz kırk yıldır bir lokma yemedim. Hatırlattığın için sağ ol."], "* Bir şey saklıyor. Ama henüz soracak sorun yok."], "mirror2": ["* Ayna. Cin, mumları gördüğünü biliyor.", ["AYNA CİNİ", "Hangi kuru üzüm? Ben üzüm demedim."], "* Sen de demedin.", ["AYNA CİNİ", "...Kar güzel yağıyor ama, değil mi? Emek var."]], "full": "* Defter doldu. Tabağın başına dön ve vakayı kapat.", "notyet": "* Defter: {n}/{t}. Eksik var. Herkesle konuştun mu?", "ready": ["* Herkes tabağın başına toplandı.", "* Molly koliyle birlikte geldi."], "steps": [{"q": "* Son kurabiyeyi tabaktan kim aldı?", "opts": [{"l": "TİPPİ", "ok": 1, "x": [["TİPPİ", "İtiraz ediyorum. Üzüm kediye zehir. Yiyemem ki."], "* Doğru. Yiyemez. Yemedi de."]}, {"l": "MOLLY", "x": ["* 03:33'te klavyenin üstündeydi.", ["MOLLY", "Kola şahit."]]}, {"l": "KUŞLAR", "x": ["* Şekerli izler pencereye gidiyor. Kırıntı yemek suç değil.", ["MİMO", "Değil."], ["MİLO", "Hiç değil."]]}, {"l": "AYNA CİNİ", "x": ["* Eli camdan geçmiyor. Biri ona götürmüş olmalı."]}]}, {"q": "* Yemediyse kurabiye şimdi nerede?", "opts": [{"l": "MİDESİNDE", "x": ["* Üzümlüydü. Tippi okur. Bilir."]}, {"l": "KOLİDE", "x": [["MOLLY", "Kolide sadece ben varım. Kontrol ettim. İki kez."]]}, {"l": "AYNADA", "ok": 1, "x": [["AYNA CİNİ", "...Yulaflıydı. Yüz kırk yılın en iyi lokması."], "* Mum, kitap, üzüm. Kurabiye aynaya gönderilmiş."]}]}, {"q": "* Kimse son kurabiyeyi bedavaya vermez. Karşılığında ne aldı?", "opts": [{"l": "GÖZLÜK", "x": ["* Gözlüğü zaten vardı."]}, {"l": "KAR", "ok": 1, "x": [["TİPPİ", "...Tamam."], ["TİPPİ", "Hava durumu kar yok dedi. Sen karlı bölümü kar yağarken izleyecektin."], ["TİPPİ", "Aynadaki 'bir kurabiyeye yağdırırım' dedi."], ["TİPPİ", "Pazarlık ettim. Yarım kurabiye dedim. Kabul etmedi."], ["AYNA CİNİ", "Etmedim."], ["TİPPİ", "Pişman değilim. Biraz pişmanım. Kurabiye güzel kokuyordu."], "* Dışarıda kar yağmaya devam ediyor."]}, {"l": "HİÇBİR ŞEY", "x": ["* Cinler bedava çalışmaz. Kediler hiç çalışmaz."]}]}], "solved": "VAKA ÇÖZÜLDÜ", "verdictTitle": "KARAR", "verdict": ["TİPPİ: suçlu. Ceza: dedektife bir tepsi kurabiye. Üzümsüz.", "AYNA CİNİ: tok. Yüz kırk yıl sonra.", "MOLLY: beraat. Kola için ayrı dosya açıldı.", "MİMO VE MİLO: beraat. Kırıntılar iade edilmeyecek.", "KAR: delil olarak alıkonuldu."], "end": ["Karlı bölüm kaldığı yerden devam ediyor."], "foot": "BU OYUNDAKİ HER ŞEY UYDURMA. KEDİLER VE KUŞLAR HARİÇ."}</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+$('#title').textContent = D.title; $('#case').innerHTML = D.case.map(esc).join('<br>');
+$('#introQ').innerHTML = D.intro.map(l => `<p>${esc(l)}</p>`).join('');
+$('#go').textContent = D.start; $('#how').textContent = D.how;
+$('#solved').textContent = D.solved;
+$('#verdict').innerHTML = `<b>${esc(D.verdictTitle)}</b>` + D.verdict.map(esc).join('<br>');
+$('#endQ').innerHTML = D.end.map(l => `<p>${esc(l)}</p>`).join(''); $('#foot').textContent = D.foot;
+
+/* ---------- sound ---------- */
+let ac = null;
+function blip(f, d = .035, v = .05) {
+  if (!ac) return; const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square'; o.frequency.value = f; g.gain.value = v;
+  g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + d);
+  o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
+}
+const VOICE = {'TİPPİ': 520, 'MOLLY': 300, 'MİMO': 980, 'MİLO': 880, 'AYNA CİNİ': 180};
+
+/* ---------- world ---------- */
+const W = 160, H = 144, cv = $('#cv'), c = cv.getContext('2d');
+const R = (col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x | 0, y | 0, w, h); };
+const P = '#f7c4d8', INK = '#0b0910', FUR = '#e9e4ee';
+// r: interaction rect, s: solid rect (optional), base: y used for draw order
+const OBJ = [
+  {id:'window', r:[14,0,36,36]},
+  {id:'mirror', r:[110,0,24,36]},
+  {id:'desk',   r:[58,30,38,22], s:[60,34,34,14], base:48},
+  {id:'heater', r:[136,30,24,30], s:[140,34,16,22], base:56},
+  {id:'tv',     r:[0,40,28,24],  s:[4,44,20,18], base:62},
+  {id:'plate',  r:[32,66,16,12], base:0},
+  {id:'tippi',  r:[62,60,24,22], s:[68,66,12,10], base:76},
+  {id:'birds',  r:[102,56,32,28], s:[112,72,12,8], base:80},
+  {id:'candles',r:[98,104,30,18], base:0},
+  {id:'bed',    r:[0,92,38,52],  s:[4,98,30,42], base:140},
+  {id:'molly',  r:[128,112,28,28], s:[132,122,18,14], base:136},
+];
+const SOLID = OBJ.filter(o => o.s).map(o => o.s);
+const pl = {x:74, y:122, dir:'u'};
+const seen = new Set();
+let ready = false, tippiTurn = 0, t0 = 0;
+const feet = (x, y) => [x + 2, y + 10, 8, 6];
+const hit = (a, b) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1];
+const inside = (px, py, r) => px >= r[0] && px < r[0] + r[2] && py >= r[1] && py < r[1] + r[3];
+function free(x, y) {
+  const f = feet(x, y);
+  if (f[0] < 2 || f[0] + f[2] > W - 2 || f[1] < 34 || f[1] + f[3] > H - 2) return false;
+  return !SOLID.some(s => hit(f, s));
+}
+function target(x, y, d) {
+  const cx = x + 6, cy = y + 11, v = {u:[0,-12], d:[0,10], l:[-12,0], r:[12,0]}[d], px = cx + v[0], py = cy + v[1];
+  return OBJ.find(o => inside(px, py, o.r)) || OBJ.find(o => inside(cx, cy, o.r));
+}
+
+/* ---------- drawing ---------- */
+function room(t) {
+  R('#2a2040', 0, 0, W, 34); R('#3a2d58', 0, 0, W, 2); R('#1b1430', 0, 30, W, 4);
+  R('#5d4884', 0, 34, W, H - 34);
+  for (let y = 34; y < H; y += 12) R('#4f3c72', 0, y, W, 1);
+  for (let y = 34, k = 0; y < H; y += 12, k++) for (let x = (k % 2) * 20; x < W; x += 40) R('#4f3c72', x, y, 1, 12);
+  R('#1b1430', 66, H - 2, 28, 2);
+  // window: night, moon, snow
+  R('#fff', 16, 4, 32, 22); R('#0d1024', 18, 6, 28, 18); R('#f3eec2', 38, 8, 4, 4);
+  for (let i = 0; i < 12; i++) R('#fff', 18 + (i * 29 + (t / 160 | 0)) % 28, 6 + (i * 17 + (t / 110 | 0)) % 18, 1, 1);
+  R('#fff', 31, 6, 2, 18); R('#fff', 18, 22, 28, 2);
+  R(P, 22, 26, 1, 1); R(P, 25, 26, 1, 1); R(P, 36, 26, 1, 1); R(P, 39, 26, 1, 1);     // sugar prints on the sill
+  // mirror, with someone in it
+  R('#c9c8cf', 112, 3, 20, 25); R('#6f7fa8', 114, 5, 16, 21);
+  const near = Math.abs(pl.x + 6 - 122) < 26 && pl.y < 60, w = (t / 300 | 0) % 2;
+  R('#b79cff', 119 + w, 12, 7, 7); R('#b79cff', 120, 19, 5 - w, 3); R('#b79cff', 122 - w, 22, 2, 2);
+  R('#fff', 120 + w, 14, 2, 2); R('#fff', 123 + w, 14, 2, 2); R(INK, 121 + w, 15, 1, 1); R(INK, 124 + w, 15, 1, 1);
+  if (near) girl(114, 10, 'd', 0, true);
+  R('#ffffff55', 115, 6, 2, 8);
+}
+function girl(x, y, dir, step, ghost) {
+  const sk = ghost ? '#b8c2de' : '#f4ece8', bob = step ? 1 : 0;
+  if (ghost) c.globalAlpha = .55;
+  R(INK, x + 2, y, 8, 8); R(INK, x + 1, y + 3, 10, 6);
+  if (dir !== 'u') { R(sk, x + 3, y + 3, 6, 4);
+    if (dir === 'd') { R(INK, x + 4, y + 5, 1, 1); R(INK, x + 7, y + 5, 1, 1); R('#8c1230', x + 5, y + 6, 2, 1); }
+    if (dir === 'l') { R(INK, x + 3, y + 5, 1, 1); R(INK, x + 7, y + 3, 2, 4); }
+    if (dir === 'r') { R(INK, x + 8, y + 5, 1, 1); R(INK, x + 3, y + 3, 2, 4); } }
+  R(P, x + 2, y - 1, 3, 2); R(P, x + 7, y - 1, 3, 2); R('#e79ab8', x + 5, y, 2, 1);
+  R(INK, x + 2, y + 8, 8, 5); R(INK, x + 1, y + 11, 10, 2); R(P, x + 5, y + 8, 2, 1);
+  R(sk, x + 1, y + 9, 1, 2); R(sk, x + 10, y + 9, 1, 2);
+  R(sk, x + 4, y + 13, 1, 2 - bob); R(sk, x + 7, y + 13, 1, 1 + bob);
+  R(INK, x + 3, y + 15 - bob, 2, 1); R(INK, x + 7, y + 14 + bob, 2, 1);
+  c.globalAlpha = 1;
+}
+const DRAW = {
+  desk(t) { R('#6b4a3a', 60, 36, 34, 12); R('#4d3429', 60, 46, 34, 2); R('#4d3429', 61, 48, 2, 2); R('#4d3429', 91, 48, 2, 2);
+    R('#c9c8cf', 68, 33, 14, 9); R('#101826', 69, 34, 12, 7); R((t / 400 | 0) % 2 ? '#7dffb0' : '#101826', 78, 37, 2, 1); R('#7dffb0', 70, 37, 7, 1);
+    R('#c9c8cf', 67, 42, 16, 2); R('#3a1d12', 80, 43, 11, 3); R('#b0202f', 88, 40, 6, 4); R('#fff', 90, 40, 1, 4); R(INK, 84, 44, 2, 1); },
+  heater(t) { R('#1b1430', 140, 34, 16, 22); R('#3b3346', 141, 35, 14, 20); R('#ff9a3c', 143, 44, 10, 8);
+    R((t / 200 | 0) % 2 ? '#ffd76a' : '#ff6a3c', 145, 46, 6, 5); R('#1b1430', 147, 26, 3, 9); },
+  tv(t) { R('#1b1430', 4, 44, 20, 16); R('#0d1024', 6, 46, 16, 11);
+    for (let i = 0; i < 7; i++) R('#fff', 6 + (i * 37) % 16, 46 + (i * 23) % 9, 1, 1);
+    R('#ffd76a', 12, 51, 4, 4); R('#fff', 13, 46, 1, 1); R('#fff', 9, 49, 2, 5); R('#fff', 17, 49, 2, 5);  // paused
+    R('#1b1430', 8, 60, 12, 2); },
+  plate(t) { R('#fff', 35, 70, 10, 5); R('#fff', 36, 69, 8, 7); R('#d9d4e0', 37, 71, 6, 3);
+    R('#b88655', 38, 71, 1, 1); R('#b88655', 41, 73, 1, 1); R('#b88655', 46, 72, 1, 1); R(FUR, 44, 68, 2, 1);
+    [[33,64],[30,58],[31,52],[28,46],[30,40]].forEach(([x, y]) => { R(P, x, y, 1, 1); R(P, x + 3, y + 1, 1, 1); });
+    R('#fff', 50, 68, 5, 6); R('#6b3a1e', 51, 68, 3, 1); R('#fff', 55, 70, 1, 2); },
+  tippi(t) { const x = 68, y = 62, b = (t / 500 | 0) % 2;
+    R(FUR, x + 1, y + 6, 10, 8); R(FUR, x + 2, y + 1, 8, 6); R(FUR, x + 2, y - 1, 2, 2); R(FUR, x + 8, y - 1, 2, 2);
+    R(P, x + 3, y, 1, 1); R(P, x + 8, y, 1, 1);
+    R(INK, x + 2, y + 3, 3, 2); R(INK, x + 7, y + 3, 3, 2); R(INK, x + 5, y + 3, 2, 1);
+    R('#9fe7ff', x + 3, y + 3, 1, 1); R('#9fe7ff', x + 8, y + 3, 1, 1); R(P, x + 5, y + 5, 2, 1);
+    R(FUR, x + 11, y + 9 - b, 2, 2); R(FUR, x + 12, y + 6 - b, 1, 3);
+    R('#c9c2d2', x + 2, y + 13, 3, 1); R('#c9c2d2', x + 7, y + 13, 3, 1); },
+  birds(t) { const a = (t / 420 | 0) % 2, b = (t / 530 | 0) % 2;
+    R('#8f6238', 117, 62, 2, 18); R('#8f6238', 108, 62, 20, 2); R('#4d3429', 112, 78, 12, 2);
+    R('#ffd76a', 109, 56 - a, 5, 6); R('#ffd76a', 110, 54 - a, 4, 3); R('#ff9a3c', 108, 56 - a, 1, 1); R(INK, 111, 55 - a, 1, 1);
+    R('#7ec8ff', 122, 56 - b, 5, 6); R('#7ec8ff', 122, 54 - b, 4, 3); R('#ff9a3c', 127, 56 - b, 1, 1); R(INK, 124, 55 - b, 1, 1); },
+  candles(t) { c.strokeStyle = '#f7c4d870'; c.beginPath(); c.ellipse(113, 113, 12, 6, 0, 0, 7); c.stroke();
+    [[101,112],[107,107],[119,107],[125,112],[113,118]].forEach(([x, y]) => { R('#fff', x, y, 2, 4); R('#5d5766', x, y - 1, 1, 1); });
+    R('#4a1b3a', 113, 112, 2, 2); R(FUR, 116, 114, 2, 1); },
+  bed(t) { R('#1b1430', 4, 96, 30, 44); R(FUR, 6, 98, 26, 10); R('#fff', 8, 100, 9, 6); R('#fff', 21, 100, 9, 6);
+    R(P, 6, 108, 26, 30); R('#e79ab8', 6, 108, 26, 2);
+    R('#8c1230', 9, 99, 8, 6); R('#f3eec2', 10, 100, 3, 4); R('#f3eec2', 13, 100, 3, 4); R('#8c1230', 13, 100, 1, 4); },
+  molly(t) { const bl = (t / 2300 | 0) % 5 === 0;
+    R(INK, 136, 115, 10, 8); R(INK, 136, 113, 2, 2); R(INK, 144, 113, 2, 2);
+    if (!bl) { R('#b6ff6a', 138, 118, 2, 2); R('#b6ff6a', 142, 118, 2, 2); R(INK, 139, 118, 1, 2); R(INK, 143, 118, 1, 2); }
+    R('#b88655', 132, 122, 18, 14); R('#8f6238', 132, 122, 18, 2); R('#e9d7b0', 140, 124, 2, 12); },
+};
+function frame(t) {
+  room(t);
+  const ents = OBJ.filter(o => DRAW[o.id]).map(o => ({b: o.base, f: () => DRAW[o.id](t)}));
+  ents.push({b: pl.y + 16, f: () => girl(pl.x, pl.y, pl.dir, moving ? (t / 140 | 0) % 2 : 0)});
+  ents.sort((a, b) => a.b - b.b).forEach(e => e.f());
+  if ((t / 350 | 0) % 2) OBJ.forEach(o => { const on = ready ? o.id === 'plate' : !seen.has(o.id);
+    if (on) R(ready ? '#fff' : P, o.r[0] + o.r[2] / 2 - 1, Math.max(1, (o.s ? o.s[1] : o.r[1] + 4) - 7), 2, 2); });
+}
+
+/* ---------- input ---------- */
+let dir = null, moving = false, mode = 'intro';
+const KEY = {ArrowUp:'u', ArrowDown:'d', ArrowLeft:'l', ArrowRight:'r', w:'u', s:'d', a:'l', d:'r'};
+addEventListener('keydown', e => { if (KEY[e.key]) { dir = KEY[e.key]; e.preventDefault(); }
+  else if (['z', 'Enter', ' '].includes(e.key) && !e.repeat) { act(); e.preventDefault(); } });
+addEventListener('keyup', e => { if (KEY[e.key] === dir) dir = null; });
+const dp = $('#dpad');
+function padDir(e) { const r = dp.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+  dir = Math.abs(x) > Math.abs(y) ? (x < 0 ? 'l' : 'r') : (y < 0 ? 'u' : 'd');
+  dp.querySelectorAll('i').forEach(i => i.classList.toggle('on', i.className.includes(dir))); }
+const padOff = () => { dir = null; dp.querySelectorAll('i').forEach(i => i.classList.remove('on')); };
+dp.addEventListener('pointerdown', e => { try { dp.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); padDir(e); });
+dp.addEventListener('pointermove', e => { if (dir) padDir(e); });
+dp.addEventListener('pointerup', padOff); dp.addEventListener('pointercancel', padOff);
+$('#a').addEventListener('pointerdown', e => { e.preventDefault(); act(); });
+$('#box').addEventListener('pointerdown', e => { if (mode === 'dialog') act(); });
+
+/* ---------- dialogue ---------- */
+let queue = [], after = null, typing = null, full = '';
+function say(lines, cb) { queue = lines.slice(); after = cb || null; mode = 'dialog'; padOff(); next(); }
+function next() {
+  const l = queue.shift();
+  if (l === undefined) { $('#meta').textContent = ''; $('#txt').textContent = ''; $('#more').style.visibility = 'hidden';
+    mode = 'play'; const cb = after; after = null; if (cb) cb(); return; }
+  const who = Array.isArray(l) ? l[0] : '', text = Array.isArray(l) ? l[1] : l;
+  $('#meta').textContent = who; const el = $('#txt'); el.textContent = ''; $('#more').style.visibility = 'hidden';
+  const chars = Array.from(text); full = text; let i = 0; const f = VOICE[who] || 440;
+  typing = setInterval(() => { el.textContent += chars[i]; if (i % 2 === 0 && chars[i] !== ' ') blip(f); i++;
+    if (i >= chars.length) done(); }, 24);
+}
+function done() { clearInterval(typing); typing = null; $('#txt').textContent = full; $('#more').style.visibility = 'visible'; }
+const TOTAL = OBJ.length;
+const hud = () => { $('#clues').textContent = seen.size + '/' + TOTAL; };
+function got(id) { return () => { if (seen.has(id)) return; seen.add(id); hud(); blip(880, .12);
+  if (seen.size === TOTAL) { ready = true; say([D.full]); } }; }
+function act() {
+  if (mode === 'dialog') { typing ? done() : next(); return; }
+  if (mode !== 'play') return;
+  const o = target(pl.x, pl.y, pl.dir); if (!o) return;
+  const id = o.id;
+  if (id === 'plate' && ready) return say(D.ready, () => ask(0));
+  if (id === 'plate' && seen.has('plate')) return say([D.notyet.replace('{n}', seen.size).replace('{t}', TOTAL)]);
+  if (id === 'tippi') return say(D.tippi[tippiTurn++ % D.tippi.length], got('tippi'));
+  if (id === 'mirror') return seen.has('candles') ? say(D.mirror2, got('mirror')) : say(D.mirror1);
+  say(D.obj[id], got(id));
+}
+function ask(n) {
+  const st = D.steps[n]; mode = 'choice'; $('#meta').textContent = ''; $('#txt').textContent = st.q;
+  const ch = $('#choice'); ch.style.display = 'grid'; ch.innerHTML = '';
+  st.opts.forEach(op => { const b = document.createElement('button'); b.textContent = op.l;
+    b.onclick = () => { ch.style.display = 'none';
+      if (!op.ok) return say(op.x, () => ask(n));
+      blip(660, .2);
+      say(op.x, () => { if (n + 1 < D.steps.length) ask(n + 1); else { mode = 'end'; $('#end').classList.add('on'); } }); };
+    ch.append(b); });
+}
+
+/* ---------- loop ---------- */
+function loop(t) {
+  const dt = Math.min(50, t - t0); t0 = t; moving = false;
+  if (mode === 'play' && dir) { pl.dir = dir; const sp = dt * .062, v = {u:[0,-sp], d:[0,sp], l:[-sp,0], r:[sp,0]}[dir];
+    if (free(pl.x + v[0], pl.y + v[1])) { pl.x += v[0]; pl.y += v[1]; moving = true; } }
+  frame(t); requestAnimationFrame(loop);
+}
+hud(); requestAnimationFrame(loop);
+$('#go').onclick = () => { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  $('#intro').classList.remove('on'); say(D.enter); };
+</script>
+</body>
+</html>
